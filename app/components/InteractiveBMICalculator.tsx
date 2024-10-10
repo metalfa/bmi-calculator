@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Label } from "@/app/components/ui/label"
@@ -16,65 +16,58 @@ const BMI_CATEGORIES = [
   { min: 30, max: 100, color: '#ef4444', label: 'Obese' },
 ]
 
-export default function InteractiveBMICalculator() {
-  const [height, setHeight] = useState('')
-  const [weight, setWeight] = useState('')
+interface BMIData {
+  height: number;
+  weight: number;
+  bmi: number | null;
+}
+
+export default function Component() {
+  const [heightInput, setHeightInput] = useState('')
+  const [weightInput, setWeightInput] = useState('')
   const [heightUnit, setHeightUnit] = useState('cm')
   const [weightUnit, setWeightUnit] = useState('kg')
-  const [bmi, setBMI] = useState<number | null>(null)
+  const [bmiData, setBmiData] = useState<BMIData>({ height: 0, weight: 0, bmi: null })
   const [targetWeight, setTargetWeight] = useState<number | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
-  const calculateBMI = (heightVal: number, weightVal: number) => {
-    let heightInMeters: number
-    let weightInKg: number
+  const convertToMetric = useCallback((value: number, unit: string): number => {
+    if (unit === 'cm' || unit === 'kg') return value;
+    if (unit === 'in') return value * 2.54; // inches to cm
+    if (unit === 'lb') return value * 0.453592; // lbs to kg
+    return value;
+  }, [])
 
-    if (heightUnit === 'cm') {
-      heightInMeters = heightVal / 100
-    } else {
-      heightInMeters = heightVal * 0.0254 // Convert inches to meters
-    }
+  const calculateBMI = useCallback((height: number, weight: number): number | null => {
+    const heightInMeters = height / 100;
+    if (heightInMeters <= 0 || weight <= 0) return null;
+    return weight / (heightInMeters * heightInMeters);
+  }, [])
 
-    if (weightUnit === 'kg') {
-      weightInKg = weightVal
-    } else {
-      weightInKg = weightVal * 0.453592 // Convert lbs to kg
-    }
-    
-    if (heightInMeters <= 0 || weightInKg <= 0) {
-      return null
-    }
-
-    return weightInKg / (heightInMeters * heightInMeters)
-  }
-
-  const handleCalculate = (e: React.FormEvent) => {
+  const handleCalculate = useCallback((e: React.FormEvent) => {
     e.preventDefault()
-    const calculatedBMI = calculateBMI(parseFloat(height), parseFloat(weight))
-    setBMI(calculatedBMI)
-    setTargetWeight(parseFloat(weight))
-  }
+    const height = convertToMetric(parseFloat(heightInput), heightUnit)
+    const weight = convertToMetric(parseFloat(weightInput), weightUnit)
+    const bmi = calculateBMI(height, weight)
+    setBmiData({ height, weight, bmi })
+    setTargetWeight(weight)
+  }, [heightInput, weightInput, heightUnit, weightUnit, convertToMetric, calculateBMI])
 
   const getAssessment = (bmiValue: number) => {
-    if (bmiValue < 18.5) {
-      return 'You are underweight. Consider gaining some weight.'
-    } else if (bmiValue >= 18.5 && bmiValue < 25) {
-      return 'Your weight is normal. Good job!'
-    } else if (bmiValue >= 25 && bmiValue < 30) {
-      return 'You are overweight. Consider losing some weight.'
-    } else {
-      return 'You are obese. It\'s recommended to consult with a healthcare professional.'
-    }
+    if (bmiValue < 18.5) return 'You are underweight. Consider gaining some weight.'
+    if (bmiValue < 25) return 'Your weight is normal. Good job!'
+    if (bmiValue < 30) return 'You are overweight. Consider losing some weight.'
+    return 'Bitch You Fat! It\'s recommended to ove your ass or consult with a healthcare professional.'
   }
 
-  const handleWeightChange = (newWeight: number) => {
-    setTargetWeight(newWeight)
+  const handleWeightChange = (newWeight: number[]) => {
+    setTargetWeight(newWeight[0])
   }
 
   const handleReset = () => {
-    setHeight('')
-    setWeight('')
-    setBMI(null)
+    setHeightInput('')
+    setWeightInput('')
+    setBmiData({ height: 0, weight: 0, bmi: null })
     setTargetWeight(null)
     if (svgRef.current) {
       while (svgRef.current.firstChild) {
@@ -84,7 +77,7 @@ export default function InteractiveBMICalculator() {
   }
 
   useEffect(() => {
-    if (bmi !== null && targetWeight !== null && svgRef.current) {
+    if (bmiData.bmi !== null && targetWeight !== null && svgRef.current) {
       const svg = svgRef.current
       const width = svg.clientWidth
       const height = 60
@@ -120,7 +113,7 @@ export default function InteractiveBMICalculator() {
 
       // Draw current BMI marker
       const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
-      const markerX = (Math.min(bmi, 40) / 40) * (width - 2 * padding) + padding
+      const markerX = (Math.min(bmiData.bmi, 40) / 40) * (width - 2 * padding) + padding
       marker.setAttribute('cx', markerX.toString())
       marker.setAttribute('cy', (height / 2).toString())
       marker.setAttribute('r', '5')
@@ -128,7 +121,7 @@ export default function InteractiveBMICalculator() {
       svg.appendChild(marker)
 
       // Draw target BMI marker
-      const targetBMI = calculateBMI(parseFloat(height), targetWeight)
+      const targetBMI = calculateBMI(bmiData.height, targetWeight)
       if (targetBMI !== null) {
         const targetMarker = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
         const targetMarkerX = (Math.min(targetBMI, 40) / 40) * (width - 2 * padding) + padding
@@ -141,7 +134,7 @@ export default function InteractiveBMICalculator() {
         svg.appendChild(targetMarker)
       }
     }
-  }, [bmi, targetWeight, height, heightUnit, weightUnit])
+  }, [bmiData, targetWeight, calculateBMI])
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -158,8 +151,8 @@ export default function InteractiveBMICalculator() {
                 id="height"
                 type="number"
                 placeholder={`Enter your height in ${heightUnit}`}
-                value={height}
-                onChange={(e) => setHeight(e.target.value)}
+                value={heightInput}
+                onChange={(e) => setHeightInput(e.target.value)}
                 required
                 className="flex-grow"
               />
@@ -186,8 +179,8 @@ export default function InteractiveBMICalculator() {
                 id="weight"
                 type="number"
                 placeholder={`Enter your weight in ${weightUnit}`}
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
+                value={weightInput}
+                onChange={(e) => setWeightInput(e.target.value)}
                 required
                 className="flex-grow"
               />
@@ -212,21 +205,21 @@ export default function InteractiveBMICalculator() {
             <Button type="button" variant="outline" onClick={handleReset}>Reset</Button>
           </div>
         </form>
-        {bmi !== null && targetWeight !== null && (
+        {bmiData.bmi !== null && targetWeight !== null && (
           <div className="mt-6 space-y-4">
             <div className="p-4 bg-secondary rounded-md">
-              <p className="font-semibold">Your BMI: {bmi.toFixed(1)}</p>
-              <p className="mt-2">{getAssessment(bmi)}</p>
+              <p className="font-semibold">Your BMI: {bmiData.bmi.toFixed(1)}</p>
+              <p className="mt-2">{getAssessment(bmiData.bmi)}</p>
             </div>
             <div>
               <Label htmlFor="target-weight">Adjust target weight</Label>
               <Slider
                 id="target-weight"
-                min={Math.max(1, parseFloat(weight) - 50)}
-                max={parseFloat(weight) + 50}
+                min={Math.max(1, bmiData.weight - 50)}
+                max={bmiData.weight + 50}
                 step={0.1}
                 value={[targetWeight]}
-                onValueChange={(value) => handleWeightChange(value[0])}
+                onValueChange={handleWeightChange}
               />
             </div>
             <div>
@@ -234,8 +227,8 @@ export default function InteractiveBMICalculator() {
             </div>
             <div>
               <p>Target Weight: {targetWeight.toFixed(1)} {weightUnit}</p>
-              <p>Target BMI: {calculateBMI(parseFloat(height), targetWeight)?.toFixed(1)}</p>
-              <p>Weight Difference: {(targetWeight - parseFloat(weight)).toFixed(1)} {weightUnit}</p>
+              <p>Target BMI: {calculateBMI(bmiData.height, targetWeight)?.toFixed(1)}</p>
+              <p>Weight Difference: {(targetWeight - bmiData.weight).toFixed(1)} {weightUnit}</p>
             </div>
             <Dialog>
               <DialogTrigger asChild>
