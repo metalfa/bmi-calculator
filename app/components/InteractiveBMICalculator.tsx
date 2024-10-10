@@ -57,8 +57,12 @@ export default function Component() {
     if (bmiValue < 18.5) return 'You are underweight. Consider gaining some weight.'
     if (bmiValue < 25) return 'Your weight is normal. Good job!'
     if (bmiValue < 30) return 'You are overweight. Consider losing some weight.'
-    return 'Bitch You Fat! It\'s recommended to ove your ass or consult with a healthcare professional.'
-  }
+    return (
+        <div>
+          <strong style={{ color: 'red' }}>Bitch You Fat!</strong> It's recommended to move your ass or consult with a healthcare professional.
+        </div>
+      );
+        }
 
   const handleWeightChange = (newWeight: number[]) => {
     setTargetWeight(newWeight[0])
@@ -139,14 +143,14 @@ export default function Component() {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Interactive BMI Calculator</CardTitle>
-        <CardDescription>Calculate your BMI and see how weight changes affect it.</CardDescription>
+        <CardTitle className="text-2xl sm:text-3xl text-center">Interactive BMI Calculator</CardTitle>
+        <CardDescription className="text-center">Calculate your BMI and see how weight changes affect it.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleCalculate} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="height">Height</Label>
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
               <Input
                 id="height"
                 type="number"
@@ -174,7 +178,7 @@ export default function Component() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="weight">Weight</Label>
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
               <Input
                 id="weight"
                 type="number"
@@ -200,7 +204,7 @@ export default function Component() {
               </RadioGroup>
             </div>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             <Button type="submit" className="flex-grow">Calculate BMI</Button>
             <Button type="button" variant="outline" onClick={handleReset}>Reset</Button>
           </div>
@@ -208,11 +212,11 @@ export default function Component() {
         {bmiData.bmi !== null && targetWeight !== null && (
           <div className="mt-6 space-y-4">
             <div className="p-4 bg-secondary rounded-md">
-              <p className="font-semibold">Your BMI: {bmiData.bmi.toFixed(1)}</p>
-              <p className="mt-2">{getAssessment(bmiData.bmi)}</p>
+              <p className="font-semibold text-center">Your BMI: {bmiData.bmi.toFixed(1)}</p>
+              <p className="mt-2 text-center">{getAssessment(bmiData.bmi)}</p>
             </div>
             <div>
-              <Label htmlFor="target-weight">Adjust target weight</Label>
+              <Label htmlFor="target-weight" className="block mb-2">Adjust target weight</Label>
               <Slider
                 id="target-weight"
                 min={Math.max(1, bmiData.weight - 50)}
@@ -222,10 +226,10 @@ export default function Component() {
                 onValueChange={handleWeightChange}
               />
             </div>
-            <div>
+            <div className="overflow-x-auto">
               <svg ref={svgRef} width="100%" height="60" />
             </div>
-            <div>
+            <div className="space-y-1 text-sm">
               <p>Target Weight: {targetWeight.toFixed(1)} {weightUnit}</p>
               <p>Target BMI: {calculateBMI(bmiData.height, targetWeight)?.toFixed(1)}</p>
               <p>Weight Difference: {(targetWeight - bmiData.weight).toFixed(1)} {weightUnit}</p>
@@ -234,7 +238,7 @@ export default function Component() {
               <DialogTrigger asChild>
                 <Button className="w-full">Get Personalized Health Plan</Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle>Upgrade to Premium</DialogTitle>
                   <DialogDescription>
