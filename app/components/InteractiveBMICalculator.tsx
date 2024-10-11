@@ -57,9 +57,8 @@ export default function Component() {
     if (bmiValue < 18.5) return 'You are underweight. Consider gaining some weight.'
     if (bmiValue < 25) return 'Your weight is normal. Good job!'
     if (bmiValue < 30) return 'You are overweight. Consider losing some weight.'
-    if (bmiValue > 35) return 'Bitch You Fat. Move Your Ass And Do Somthing About It.'
-    
-        }
+    return 'You are obese. It is advisable to consult a healthcare provider.';
+  }
 
   const handleWeightChange = (newWeight: number[]) => {
     setTargetWeight(newWeight[0])
@@ -138,13 +137,14 @@ export default function Component() {
   }, [bmiData, targetWeight, calculateBMI])
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-screen-lg mx-auto p-4 sm:p-6 md:p-8"> {/* Responsive card */}
       <CardHeader>
         <CardTitle className="text-2xl sm:text-3xl text-center">Interactive BMI Calculator</CardTitle>
         <CardDescription className="text-center">Calculate your BMI and see how weight changes affect it.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleCalculate} className="space-y-4">
+          {/* Height Input */}
           <div className="space-y-2">
             <Label htmlFor="height">Height</Label>
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
@@ -173,6 +173,7 @@ export default function Component() {
               </RadioGroup>
             </div>
           </div>
+          {/* Weight Input */}
           <div className="space-y-2">
             <Label htmlFor="weight">Weight</Label>
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
@@ -201,11 +202,13 @@ export default function Component() {
               </RadioGroup>
             </div>
           </div>
+          {/* Buttons */}
           <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             <Button type="submit" className="flex-grow">Calculate BMI</Button>
             <Button type="button" variant="outline" onClick={handleReset}>Reset</Button>
           </div>
         </form>
+        {/* BMI Result and Slider */}
         {bmiData.bmi !== null && targetWeight !== null && (
           <div className="mt-6 space-y-4">
             <div className="p-4 bg-secondary rounded-md">
