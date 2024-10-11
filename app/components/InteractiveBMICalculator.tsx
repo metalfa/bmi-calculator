@@ -57,11 +57,8 @@ export default function Component() {
     if (bmiValue < 18.5) return 'You are underweight. Consider gaining some weight.'
     if (bmiValue < 25) return 'Your weight is normal. Good job!'
     if (bmiValue < 30) return 'You are overweight. Consider losing some weight.'
-    return (
-        <div>
-          <strong style={{ color: 'red' }}>Bitch You Fat!</strong> It's recommended to move your ass or consult with a healthcare professional.
-        </div>
-      );
+    if (bmiValue > 35) return 'Bitch You Fat. Move Your Ass And Do Somthing About It.'
+    
         }
 
   const handleWeightChange = (newWeight: number[]) => {
